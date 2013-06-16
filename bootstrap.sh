@@ -15,7 +15,7 @@
 
 echo "> Use like: sudo bootstrap.sh /dev/sd[x]"
 
-# variables... Might want to change some stuff here. 
+# variables... Might want to change some stuff here.
 buildenv="/root/raspbian/bootstrap"
 rootfs="${buildenv}/rootfs"
 bootfs="${rootfs}/boot"
@@ -111,25 +111,25 @@ export LANGUAGE=C
 export LANG=C
 export LC_ALL=C
 
-# This should match what has been written above. Couldn't use variables in my test; they got cleared for some reason. 
+# This should match what has been written above. Couldn't use variables in my test; they got cleared for some reason.
 echo "deb http://mirrordirector.raspbian.org/raspbian wheezy main" > etc/apt/sources.list
 echo "deb-src http://mirrordirector.raspbian.org/raspbian wheezy main" >> etc/apt/sources.list
 
 # get the raspbian key, or you'll get untrusted package errors
 wget http://archive.raspbian.org/raspbian.public.key -O ./raspbian.key
 
-echo "dwc_otg.lpm_enable=0 console=ttyUSB0,115200 kgdboc=ttyUSB0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait" > boot/cmdline.txt
+echo "dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait" > boot/cmdline.txt
 
-# firstboot will repair all the broken stuff when booting the first time. 
-mkdir etc/rc.local.d
+# firstboot will repair all the broken stuff when booting the first time.
+mkdir etc/rc.local.d/
 
 echo "#!/bin/sh
 
 # Initialize the system on the first boot
 if test -f /firstboot.sh
 then
-	. /firstboot.sh
-	rm /firstboot.sh
+  . /firstboot.sh
+  rm /firstboot.sh
 fi
 
 exit 0" > etc/rc.local.d/firstboot
@@ -143,7 +143,7 @@ exit 0" > etc/rc.local
 # make fstab file
 echo "proc  /proc proc  defaults  0   0
 /dev/mmcblk0p1  /boot   vfat  defaults  0   0
-/dev/mmcblk0p1  /   ext4  noatime,errors=remount-ro 0   0
+/dev/mmcblk0p2  /   ext4  noatime,errors=remount-ro 0   1
 " > etc/fstab
 
 # give it a name
@@ -161,8 +161,8 @@ echo "vchiq
 snd_bcm2835
 " >> etc/modules
 
-echo "console-common	console-data/keymap/policy	select	Select keymap from full list
-console-common	console-data/keymap/full	select	be-latin1
+echo "console-common  console-data/keymap/policy  select  Select keymap from full list
+console-common  console-data/keymap/full  select  be-latin1
 " > debconf.set
 
 echo "#!/bin/bash
@@ -171,12 +171,14 @@ rm -f /debconf.set
 apt-key add raspbian.key
 rm -f raspbian.key
 apt-get update
-apt-get -y install git-core binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils 
+apt-get -y install git-core binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils
 wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update
 chmod +x /usr/bin/rpi-update
 touch /boot/start.elf
 mkdir -p /lib/modules
 rpi-update
+rm -rf /boot.bak
+rm -rf /lib/modules.bak
 apt-get -y install locales console-common ntpdate openssh-server
 echo root:raspberry | chpasswd
 rm -f /etc/udev/rules.d/70-persistent-net.rules
