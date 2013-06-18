@@ -97,8 +97,8 @@ mount $rootp $rootfs
 
 cd $rootfs
 
-echo "--- debootstrap --no-check-gpg --foreign --arch=armhf  --variant=minbase ${deb_release} ${rootfs} ${deb_local_mirror}"
-debootstrap --no-check-gpg --foreign --arch=armhf --variant=minbase $deb_release $rootfs $deb_local_mirror
+echo "--- debootstrap --no-check-gpg --foreign --arch=armhf  --variant=minbase ${deb_release} ${rootfs} ${deb_mirror}"
+debootstrap --no-check-gpg --foreign --arch=armhf --variant=minbase $deb_release $rootfs $deb_mirror
 echo "debootstrap ok"
 
 cp /usr/bin/qemu-arm-static usr/bin/
@@ -124,7 +124,6 @@ echo "dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 console=
 mkdir etc/rc.local.d/
 
 echo "#!/bin/sh
-
 # Initialize the system on the first boot
 if test -f /firstboot.sh
 then
