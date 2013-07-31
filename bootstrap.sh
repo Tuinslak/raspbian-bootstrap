@@ -9,9 +9,11 @@
 # Based on work by Alexandre Bulte at https://gist.github.com/abulte/3917357
 
 # v3:
-# Sun 16 Jun 2013 > Wed 31 Jul 2013
+# Jun 2013
 # Yeri Tiete (http://yeri.be)
 # > Made sure it bootstrapped again correctly.
+# and some other changes
+# Repo can be found on Github: http://yeri.be/11v
 
 echo "> Use like: sudo bootstrap.sh /dev/sd[x]"
 
@@ -107,8 +109,8 @@ mount $rootp $rootfs
 
 cd $rootfs
 
-echo "--- debootstrap --no-check-gpg --foreign --arch=armhf  --variant=minbase ${deb_release} ${rootfs} ${deb_mirror}"
-debootstrap --no-check-gpg --foreign --arch=armhf --variant=minbase $deb_release $rootfs $deb_mirror
+echo "--- debootstrap --no-check-gpg --foreign --arch=armhf  --variant=minbase ${deb_release} ${rootfs} ${deb_local_mirror}"
+debootstrap --no-check-gpg --foreign --arch=armhf --variant=minbase $deb_release $rootfs $deb_local_mirror
 echo "debootstrap ok"
 
 cp /usr/bin/qemu-arm-static usr/bin/
@@ -130,50 +132,11 @@ wget http://archive.raspbian.org/raspbian.public.key -O ./raspbian.key
 
 echo "dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait" > boot/cmdline.txt
 
-# firstboot will repair all the broken stuff when booting the first time.
-echo "#!/bin/sh -e
-# Run local parts
-run-parts /etc/rc.local.d
-
-exit 0" > etc/rc.local
-
-chmod +x etc/rc.local
-
-mkdir etc/rc.local.d/
-
-echo "#!/bin/sh
-# Initialize the system on the first boot
-if test -f /firstboot.sh
-then
-  . /firstboot.sh
-  rm /firstboot.sh
-fi
-
-exit 0" > etc/rc.local.d/firstboot
-
-chmod +x etc/rc.local.d/firstboot
-
-echo "#!/bin/sh
-# Generate a hostname
-UID=$(ip addr show dev eth0 | grep ether | awk '{print $2}' | awk 'BEGIN {FS=":"}; {print $4$5$6}')
-HOSTNAME=rpi-$UID
-echo $HOSTNAME > /etc/hostname
-echo "127.0.0.1       localhost.localdomain localhost" > /etc/hosts
-echo "127.0.1.1       $HOSTNAME.$DOMAIN $HOSTNAME" >> /etc/hosts
-invoke-rc.d hostname.sh start
-
-# Configure all remaining packages
-dpkg --configure -a
-
-# Set the time
-ntpdate europe.pool.ntp.org" > firstboot.sh
-
-chmod +x firstboot.sh
-
 # make fstab file
-echo "proc  /proc proc  defaults  0   0
-/dev/mmcblk0p1  /boot   vfat  defaults  0   0
-/dev/mmcblk0p2  /   ext4  noatime,errors=remount-ro 0   1
+echo "# /etc/fstab
+proc            /proc   proc  defaults                  0   0
+/dev/mmcblk0p1  /boot   vfat  defaults                  0   0
+/dev/mmcblk0p2  /       ext4  noatime,errors=remount-ro 0   1
 " > etc/fstab
 
 # give it a name
@@ -217,11 +180,52 @@ sync
 chmod +x third-stage
 LANG=C chroot $rootfs /third-stage
 
+# firstboot will repair all the broken stuff when booting the first time.
+echo "#!/bin/sh -e
+# Run local parts
+run-parts /etc/rc.local.d
+
+exit 0" > etc/rc.local
+
+chmod +x etc/rc.local
+
+mkdir etc/rc.local.d/
+
+echo "#!/bin/sh
+# Initialize the system on the first boot
+if test -f /firstboot.sh
+then
+  . /firstboot.sh
+  rm /firstboot.sh
+fi
+
+exit 0" > etc/rc.local.d/firstboot
+
+chmod +x etc/rc.local.d/firstboot
+
+echo "#!/bin/sh
+# Generate a hostname
+UID=\$(ip addr show dev eth0 | grep ether | awk '{print $2}' | awk 'BEGIN {FS=":"}; {print $4$5$6}')
+HOSTNAME=rpi-\$UID
+echo \$HOSTNAME > /etc/hostname
+echo "127.0.0.1       localhost.localdomain localhost" > /etc/hosts
+echo "127.0.1.1       \$HOSTNAME.$DOMAIN \$HOSTNAME" >> /etc/hosts
+invoke-rc.d hostname.sh start
+
+# Configure all remaining packages
+dpkg --configure -a
+
+# Set the time
+ntpdate europe.pool.ntp.org" > firstboot.sh
+
+chmod +x firstboot.sh
+
 echo "#!/bin/bash
 apt-get clean
 rm -f cleanup
 rm etc/ssh/*key
 rm etc/ssh/*.pub
+rm -rf tmp/*
 sync
 " > cleanup
 chmod +x cleanup
