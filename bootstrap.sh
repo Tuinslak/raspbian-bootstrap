@@ -19,7 +19,7 @@ echo "> Use like: sudo bootstrap.sh /dev/sd[x]"
 buildenv="/root/raspbian/bootstrap"
 rootfs="${buildenv}/rootfs"
 bootfs="${rootfs}/boot"
-deb_mirror="http://mirrordirector.raspbian.org/raspbian"
+deb_local_mirror="http://mirrordirector.raspbian.org/raspbian"
 bootsize="128M"
 deb_release="wheezy"
 device=$1
