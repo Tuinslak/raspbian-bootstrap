@@ -9,7 +9,7 @@
 # Based on work by Alexandre Bulte at https://gist.github.com/abulte/3917357
 
 # v3:
-# Sun 16 Jun 2013
+# Sun 16 Jun 2013 > Wed 31 Jul 2013
 # Yeri Tiete (http://yeri.be)
 # > Made sure it bootstrapped again correctly.
 
@@ -25,6 +25,16 @@ deb_release="wheezy"
 device=$1
 mydate=`date +%Y%m%d`
 image=""
+# set your local domain name
+DOMAIN=botnet.corp.flatturtle.com
+# configure which packages to install. You probably don't need puppet.
+PACKAGES="git-core binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils isc-dhcp-client net-tools locales console-common ntpdate openssh-server puppet"
+# Keymap to use (this seems to provide a decent list: http://nic.phys.ethz.ch/projects/dphys3/planning/debconf.final)
+KEYMAP="console-data/keymap/azerty/belgian/standard/keymap"
+
+#
+####### START OF MESSY CODE
+#
 
 
 if [ $EUID -ne 0 ]; then
@@ -112,8 +122,8 @@ export LANG=C
 export LC_ALL=C
 
 # This should match what has been written above. Couldn't use variables in my test; they got cleared for some reason.
-echo "deb http://mirrordirector.raspbian.org/raspbian wheezy main" > etc/apt/sources.list
-echo "deb-src http://mirrordirector.raspbian.org/raspbian wheezy main" >> etc/apt/sources.list
+echo "deb $deb_local_mirror wheezy main" > etc/apt/sources.list
+echo "deb-src $deb_local_mirror wheezy main" >> etc/apt/sources.list
 
 # get the raspbian key, or you'll get untrusted package errors
 wget http://archive.raspbian.org/raspbian.public.key -O ./raspbian.key
@@ -121,6 +131,14 @@ wget http://archive.raspbian.org/raspbian.public.key -O ./raspbian.key
 echo "dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait" > boot/cmdline.txt
 
 # firstboot will repair all the broken stuff when booting the first time.
+echo "#!/bin/sh -e
+# Run local parts
+run-parts /etc/rc.local.d
+
+exit 0" > etc/rc.local
+
+chmod +x etc/rc.local
+
 mkdir etc/rc.local.d/
 
 echo "#!/bin/sh
@@ -133,11 +151,24 @@ fi
 
 exit 0" > etc/rc.local.d/firstboot
 
-echo "#!/bin/sh -e
-# Run local parts
-run-parts /etc/rc.local.d
+chmod +x etc/rc.local.d/firstboot
 
-exit 0" > etc/rc.local
+echo "#!/bin/sh
+# Generate a hostname
+UID=$(ip addr show dev eth0 | grep ether | awk '{print $2}' | awk 'BEGIN {FS=":"}; {print $4$5$6}')
+HOSTNAME=rpi-$UID
+echo $HOSTNAME > /etc/hostname
+echo "127.0.0.1       localhost.localdomain localhost" > /etc/hosts
+echo "127.0.1.1       $HOSTNAME.$DOMAIN $HOSTNAME" >> /etc/hosts
+invoke-rc.d hostname.sh start
+
+# Configure all remaining packages
+dpkg --configure -a
+
+# Set the time
+ntpdate europe.pool.ntp.org" > firstboot.sh
+
+chmod +x firstboot.sh
 
 # make fstab file
 echo "proc  /proc proc  defaults  0   0
@@ -161,7 +192,7 @@ snd_bcm2835
 " >> etc/modules
 
 echo "console-common  console-data/keymap/policy  select  Select keymap from full list
-console-common  console-data/keymap/full  select  be-latin1
+console-common  console-data/keymap/full  select  $KEYMAP
 " > debconf.set
 
 echo "#!/bin/bash
@@ -170,7 +201,7 @@ rm -f /debconf.set
 apt-key add raspbian.key
 rm -f raspbian.key
 apt-get update
-apt-get -y install git-core binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils
+apt-get -y install $PACKAGES
 wget http://goo.gl/1BOfJ -O /usr/bin/rpi-update
 chmod +x /usr/bin/rpi-update
 touch /boot/start.elf
@@ -178,7 +209,6 @@ mkdir -p /lib/modules
 rpi-update
 rm -rf /boot.bak
 rm -rf /lib/modules.bak
-apt-get -y install locales console-common ntpdate openssh-server
 echo root:raspberry | chpasswd
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 rm -f third-stage
