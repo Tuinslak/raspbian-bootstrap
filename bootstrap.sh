@@ -30,8 +30,9 @@ image=""
 # set your local domain name
 DOMAIN=botnet.corp.flatturtle.com
 # configure which packages to install. You probably don't need puppet.
-PACKAGES="git-core binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils isc-dhcp-client net-tools locales console-common ntpdate openssh-server puppet"
+PACKAGES="git-core binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils isc-dhcp-client net-tools locales console-common console-setup ntpdate openssh-server puppet"
 # Keymap to use (this seems to provide a decent list: http://nic.phys.ethz.ch/projects/dphys3/planning/debconf.final)
+# note: this doesn't really seem to work (check further down in the script and alter /etc/default/keyboard part)
 KEYMAP="console-data/keymap/azerty/belgian/standard/keymap"
 
 #
@@ -105,6 +106,7 @@ mkfs.ext4 $rootp
 
 mkdir -p $rootfs
 
+
 mount $rootp $rootfs
 
 cd $rootfs
@@ -173,6 +175,14 @@ rpi-update
 rm -rf /boot.bak
 rm -rf /lib/modules.bak
 echo root:raspberry | chpasswd
+# The other keymap thing isn't working. This forces be keymap... 
+echo "# KEYBOARD CONFIGURATION FILE
+# Consult the keyboard(5) manual page.
+XKBMODEL=\"pc105\"
+XKBLAYOUT=\"be\"
+XKBVARIANT=\"\"
+XKBOPTIONS=\"\"
+BACKSPACE=\"guess\"" > /etc/default/keyboard
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 rm -f third-stage
 sync
@@ -205,8 +215,8 @@ chmod +x etc/rc.local.d/firstboot
 
 echo "#!/bin/sh
 # Generate a hostname
-UID=\$(ip addr show dev eth0 | grep ether | awk '{print $2}' | awk 'BEGIN {FS=":"}; {print $4$5$6}')
-HOSTNAME=rpi-\$UID
+HOSTID=\$(ip addr show dev eth0 | grep ether | awk '{print \$2}' | awk 'BEGIN {FS=\":\"}; {print \$4\$5\$6}')
+HOSTNAME=rpi-\$HOSTID
 echo \$HOSTNAME > /etc/hostname
 echo "127.0.0.1       localhost.localdomain localhost" > /etc/hosts
 echo "127.0.1.1       \$HOSTNAME.$DOMAIN \$HOSTNAME" >> /etc/hosts
@@ -214,6 +224,7 @@ invoke-rc.d hostname.sh start
 
 # Configure all remaining packages
 dpkg --configure -a
+dpkg-reconfigure openssh-server
 
 # Set the time
 ntpdate europe.pool.ntp.org" > firstboot.sh
