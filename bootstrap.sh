@@ -30,7 +30,7 @@ image=""
 # set your local domain name
 DOMAIN=botnet.corp.flatturtle.com
 # configure which packages to install. You probably don't need puppet.
-PACKAGES="git-core binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils isc-dhcp-client net-tools locales console-common console-setup ntpdate openssh-server puppet"
+PACKAGES="git-core nano binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils isc-dhcp-client net-tools locales console-common console-setup ntpdate openssh-server puppet"
 # Keymap to use (this seems to provide a decent list: http://nic.phys.ethz.ch/projects/dphys3/planning/debconf.final)
 # note: this doesn't really seem to work (check further down in the script and alter /etc/default/keyboard part)
 KEYMAP="console-data/keymap/azerty/belgian/standard/keymap"
