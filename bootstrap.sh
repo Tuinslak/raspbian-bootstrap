@@ -135,10 +135,20 @@ wget http://archive.raspbian.org/raspbian.public.key -O ./raspbian.key
 echo "dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait" > boot/cmdline.txt
 
 # make fstab file
-echo "# /etc/fstab
+echo "# /etc/fstab: static file system information.
+# <file system>  <dir> <type> <options>             <dump> <pass>
+
+# System mounts
 proc            /proc   proc  defaults                  0   0
+
+# Data mounts
 /dev/mmcblk0p1  /boot   vfat  defaults                  0   0
 /dev/mmcblk0p2  /       ext4  noatime,errors=remount-ro 0   1
+
+# Minimize writes
+tmpfs           /var/log            tmpfs defaults,noatime 0 0
+tmpfs           /var/cache/apt      tmpfs defaults,noatime 0 0
+tmpfs           /var/lib/apt/lists  tmpfs defaults,noatime 0 0
 " > etc/fstab
 
 # give it a name
