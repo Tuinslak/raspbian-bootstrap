@@ -23,6 +23,9 @@ rootfs="${buildenv}/rootfs"
 bootfs="${rootfs}/boot"
 deb_local_mirror="http://mirrordirector.raspbian.org/raspbian"
 bootsize="128M"
+# set rootsize to 1,6Gb. This way, we'll be able to flash 2Gb and up SD cards.
+# We'll run resize2fs later to make sure it uses the entire disk.
+rootsize="1624M"
 deb_release="wheezy"
 device=$1
 mydate=`date +%Y%m%d`
@@ -30,10 +33,11 @@ image=""
 # set your local domain name
 DOMAIN=botnet.corp.flatturtle.com
 # configure which packages to install.
-PACKAGES="git-core nano rsyslog binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils isc-dhcp-client net-tools locales console-common console-setup ntpdate openssh-server bsd-mailx"
+source ./packages.sh
 # Keymap to use (this seems to provide a decent list: http://nic.phys.ethz.ch/projects/dphys3/planning/debconf.final)
 # note: this doesn't really seem to work (check further down in the script and alter /etc/default/keyboard part)
 KEYMAP="console-data/keymap/azerty/belgian/standard/keymap"
+
 
 #
 ####### START OF MESSY CODE
@@ -73,7 +77,7 @@ n
 p
 2
 
-
++$rootsize
 w
 EOF
 
@@ -182,17 +186,19 @@ chmod +x /usr/bin/rpi-update
 touch /boot/start.elf
 mkdir -p /lib/modules
 rpi-update
+# remove backups and other crap
 rm -rf /boot.bak
 rm -rf /lib/modules.bak
+# set root psw to raspberry
 echo root:raspberry | chpasswd
 # The other keymap thing isn't working. This forces be keymap...
-echo "# KEYBOARD CONFIGURATION FILE
+echo \"# KEYBOARD CONFIGURATION FILE
 # Consult the keyboard(5) manual page.
 XKBMODEL=\"pc105\"
 XKBLAYOUT=\"be\"
 XKBVARIANT=\"\"
 XKBOPTIONS=\"\"
-BACKSPACE=\"guess\"" > /etc/default/keyboard
+BACKSPACE=\"guess\"\" > /etc/default/keyboard
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 rm -f third-stage
 sync
@@ -224,6 +230,20 @@ exit 0" > etc/rc.local.d/firstboot
 chmod +x etc/rc.local.d/firstboot
 
 echo "#!/bin/sh
+# fix disk size
+fdisk /dev/sda << EOF
+d
+2
+n
+p
+2
+
+
+w
+EOF
+
+resize2fs /dev/sda2
+
 # Generate a hostname
 HOSTID=\$(ip addr show dev eth0 | grep ether | awk '{print \$2}' | awk 'BEGIN {FS=\":\"}; {print \$4\$5\$6}')
 HOSTNAME=rpi-\$HOSTID
@@ -241,12 +261,20 @@ ntpdate europe.pool.ntp.org" > firstboot.sh
 
 chmod +x firstboot.sh
 
+# execute "more.sh" if it exists
+if test -f more.sh
+then
+	source more.sh
+fi
+
 echo "#!/bin/bash
 apt-get clean
 rm -f cleanup
 rm etc/ssh/*key
 rm etc/ssh/*.pub
 rm -rf tmp/*
+rm -rf /var/log/*
+killall cron
 sync
 " > cleanup
 chmod +x cleanup

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# configure which packages to install.
+PACKAGES="git-core nano rsyslog binutils ca-certificates wget libreadline6 dialog module-init-tools apt-utils isc-dhcp-client net-tools locales console-common console-setup ntpdate openssh-server bsd-mailx"
+
+# EOF
