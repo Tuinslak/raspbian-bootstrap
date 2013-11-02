@@ -179,6 +179,16 @@ echo "console-common  console-data/keymap/policy  select  Select keymap from ful
 console-common  console-data/keymap/full  select  $KEYMAP
 " > debconf.set
 
+# This should be changed probably.
+echo "# KEYBOARD CONFIGURATION FILE
+# Consult the keyboard(5) manual page.
+XKBMODEL=\"pc105\"
+XKBLAYOUT=\"be\"
+XKBVARIANT=\"\"
+XKBOPTIONS=\"\"
+BACKSPACE=\"guess\"
+" > etc/default/keyboard
+
 echo "#!/bin/bash
 debconf-set-selections /debconf.set
 rm -f /debconf.set
@@ -196,19 +206,14 @@ rm -rf /boot.bak
 rm -rf /lib/modules.bak
 # set root psw to raspberry
 echo root:raspberry | chpasswd
-# The other keymap thing isn't working. This forces be keymap...
-echo \"# KEYBOARD CONFIGURATION FILE
-# Consult the keyboard(5) manual page.
-XKBMODEL=\"pc105\"
-XKBLAYOUT=\"be\"
-XKBVARIANT=\"\"
-XKBOPTIONS=\"\"
-BACKSPACE=\"guess\"\" > /etc/default/keyboard
+# The other keymap thing is not working. This forces be keymap...
 rm -f /etc/udev/rules.d/70-persistent-net.rules
 rm -f third-stage
 sync
 " > third-stage
+
 chmod +x third-stage
+
 LANG=C chroot $rootfs /third-stage
 
 # firstboot will repair all the broken stuff when booting the first time.
@@ -294,6 +299,5 @@ if [ "$image" != "" ]; then
   kpartx -d $image
   echo "Created Image: $image"
 fi
-
 
 echo "Done... It's `date +%H:%m` and a beautiful day. Enjoy it."
