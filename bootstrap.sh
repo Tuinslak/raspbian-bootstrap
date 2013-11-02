@@ -14,6 +14,11 @@
 # > Made sure it bootstrapped again correctly.
 # and some other changes
 # Repo can be found on Github: http://yeri.be/11v
+# More updates followed in July, August
+# v3.1:
+# Nov 2013
+# Use of additional files, fixed some other issues.
+# Support for 2Gb SD cards and resizefs at firstboot.
 
 echo "> Use like: sudo bootstrap.sh /dev/sd[x]"
 

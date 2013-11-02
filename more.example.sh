@@ -1,8 +1,10 @@
 #!/bin/bash
+# rename this file to "more.sh"
 echo '
 # example of additional commands. I, for example, need Puppet.
 apt-get install -y puppet
 mkdir -p etc/puppet/
+
 echo "[main]
 logdir=/var/log/puppet
 vardir=/var/lib/puppet
@@ -14,6 +16,10 @@ prerun_command=/etc/puppet/etckeeper-commit-pre
 postrun_command=/etc/puppet/etckeeper-commit-post
 server=puppet.corp.flatturtle.com
 " > etc/puppet/puppet.conf
+
+echo "puppet agent --waitforcert 60" >> firstboot.sh
+
+
 ' > fourth-stage
 # Change and add anything you need. Do not add a / at the beginning of the path. See the example above.
 
