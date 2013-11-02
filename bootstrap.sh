@@ -125,6 +125,9 @@ debootstrap --no-check-gpg --foreign --arch=armhf --variant=minbase $deb_release
 echo "debootstrap ok"
 
 cp /usr/bin/qemu-arm-static usr/bin/
+
+echo "=> executing second-stage (debootstrap)."
+
 LANG=C chroot $rootfs /debootstrap/debootstrap --second-stage
 
 mount $bootp $bootfs
@@ -214,6 +217,8 @@ sync
 
 chmod +x third-stage
 
+echo "=> executing third-stage."
+
 LANG=C chroot $rootfs /third-stage
 
 # firstboot will repair all the broken stuff when booting the first time.
@@ -252,6 +257,7 @@ p
 w
 EOF
 
+# this wont work: have to run it manually with root privileges afterwards.
 resize2fs /dev/root
 
 # Generate a hostname
@@ -275,15 +281,8 @@ mv /resize2fs.sh /etc/rc.local.d/00_resize2fs.sh" > firstboot.sh
 
 chmod +x firstboot.sh
 
-echo "#!/bin/bash
-resize2fs /dev/root
-rm /etc/rc.local.d/00_resize2fs.sh" > resize2fs.sh
-
-chmod +x resize2fs.sh
-
 # execute "more.sh" if it exists
-if test -f more.sh
-then
+if [ -f ./more.sh ]; then
   echo "=> executing more.sh."
 	source ./more.sh
 fi
@@ -295,10 +294,10 @@ rm etc/ssh/*key
 rm etc/ssh/*.pub
 rm -rf tmp/*
 rm -rf /var/log/*
-killall cron
 sync
 " > cleanup
 chmod +x cleanup
+echo "=> executing cleanup."
 LANG=C chroot $rootfs /cleanup
 
 cd
