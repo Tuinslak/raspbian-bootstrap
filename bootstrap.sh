@@ -241,7 +241,7 @@ chmod +x etc/rc.local.d/firstboot
 
 echo "#!/bin/sh
 # fix disk size
-fdisk /dev/sda << EOF
+fdisk /dev/mmcblk0 << EOF
 d
 2
 n
@@ -252,7 +252,7 @@ p
 w
 EOF
 
-resize2fs /dev/sda2
+resize2fs /dev/root
 
 # Generate a hostname
 HOSTID=\$(ip addr show dev eth0 | grep ether | awk '{print \$2}' | awk 'BEGIN {FS=\":\"}; {print \$4\$5\$6}')
@@ -267,14 +267,25 @@ dpkg --configure -a
 dpkg-reconfigure openssh-server
 
 # Set the time
-ntpdate europe.pool.ntp.org" > firstboot.sh
+ntpdate europe.pool.ntp.org
+
+# execute resize2fs at next boot (because there is big chance
+# fdisk couldn't update the partition table on live systeem. A reboot is required.
+mv /resize2fs.sh /etc/rc.local.d/00_resize2fs.sh" > firstboot.sh
 
 chmod +x firstboot.sh
+
+echo "#!/bin/bash
+resize2fs /dev/root
+rm /etc/rc.local.d/00_resize2fs.sh" > resize2fs.sh
+
+chmod +x resize2fs.sh
 
 # execute "more.sh" if it exists
 if test -f more.sh
 then
-	source more.sh
+  echo "=> executing more.sh."
+	source ./more.sh
 fi
 
 echo "#!/bin/bash

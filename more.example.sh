@@ -1,9 +1,10 @@
 #!/bin/bash
+
 # rename this file to "more.sh"
-echo '
-# example of additional commands. I, for example, need Puppet.
-apt-get install -y puppet
-mkdir -p etc/puppet/
+# Execute and add all the stuff. Be sure to check bootstrap.sh as to what should be executed as chroot
+# and what shouldn't. 
+
+mkdir -p etc/puppet
 
 echo "[main]
 logdir=/var/log/puppet
@@ -14,16 +15,19 @@ factpath=$vardir/lib/facter
 templatedir=$confdir/templates
 prerun_command=/etc/puppet/etckeeper-commit-pre
 postrun_command=/etc/puppet/etckeeper-commit-post
-server=puppet.corp.flatturtle.com
-" > etc/puppet/puppet.conf
+server=puppet.corp.flatturtle.com" > etc/puppet/puppet.conf
 
-echo "puppet agent --waitforcert 60" >> firstboot.sh
+echo "
+puppet agent --waitforcert 60" >> firstboot.sh
 
-
-' > fourth-stage
-# Change and add anything you need. Do not add a / at the beginning of the path. See the example above.
+echo "#!/bin/bash
+# example of additional commands. I, for example, need Puppet.
+apt-get -y install puppet
+rm -f fourth-stage" > fourth-stage
 
 chmod +x fourth-stage
+
+# And execute it.
 LANG=C chroot $rootfs /fourth-stage
 
 # EOF
