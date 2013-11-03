@@ -20,34 +20,41 @@
 # Use of additional files, fixed some other issues.
 # Support for 2Gb SD cards and resizefs at firstboot.
 
-echo "> Use like: sudo bootstrap.sh /dev/sd[x]"
+echo "Please be sure to be in the same directory as bootstrap.sh and more.sh."
+echo "Else this will not work."
+echo ""
+echo "=> Use like: sudo bootstrap.sh /dev/sd[x]."
+echo ""
 
 # variables... Might want to change some stuff here.
-buildenv="/root/raspbian/bootstrap"
-rootfs="${buildenv}/rootfs"
-bootfs="${rootfs}/boot"
-deb_local_mirror="http://mirrordirector.raspbian.org/raspbian"
+# set your local domain name
+DOMAIN=botnet.corp.flatturtle.com
+# Keymap to use (this seems to provide a decent list: http://nic.phys.ethz.ch/projects/dphys3/planning/debconf.final)
+# note: this doesn't really seem to work (check further down in the script and alter /etc/default/keyboard part)
+KEYMAP="console-data/keymap/azerty/belgian/standard/keymap"
+# size of the fat partition (p1). 128Mb is plenty:
 bootsize="128M"
 # set rootsize to 1,6Gb. This way, we'll be able to flash 2Gb and up SD cards.
 # We'll run resize2fs later to make sure it uses the entire disk.
 rootsize="1624M"
+# some other vars you should not really touch
+buildenv="/root/raspbian/bootstrap"
+rootfs="${buildenv}/rootfs"
+bootfs="${rootfs}/boot"
+workingpath=`pwd`
+deb_local_mirror="http://mirrordirector.raspbian.org/raspbian"
 deb_release="wheezy"
 device=$1
 mydate=`date +%Y%m%d`
 image=""
-# set your local domain name
-DOMAIN=botnet.corp.flatturtle.com
-# configure which packages to install.
+# configure which packages to install. Edit packages.sh to add more or less packages.
 source ./packages.sh
-# Keymap to use (this seems to provide a decent list: http://nic.phys.ethz.ch/projects/dphys3/planning/debconf.final)
-# note: this doesn't really seem to work (check further down in the script and alter /etc/default/keyboard part)
-KEYMAP="console-data/keymap/azerty/belgian/standard/keymap"
-
 
 #
 ####### START OF MESSY CODE
 #
 
+echo "=> starting partitioning."
 
 if [ $EUID -ne 0 ]; then
   echo "ERROR: This tool must be run as root"
@@ -110,6 +117,8 @@ else
   fi
 fi
 
+echo "=> creating filesystems."
+
 mkfs.vfat $bootp
 mkfs.ext4 $rootp
 
@@ -120,9 +129,10 @@ mount $rootp $rootfs
 
 cd $rootfs
 
-echo "--- debootstrap --no-check-gpg --foreign --arch=armhf  --variant=minbase ${deb_release} ${rootfs} ${deb_local_mirror}"
+echo "=> bootstrapping:"
+echo "  --- debootstrap --no-check-gpg --foreign --arch=armhf  --variant=minbase ${deb_release} ${rootfs} ${deb_local_mirror}"
 debootstrap --no-check-gpg --foreign --arch=armhf --variant=minbase $deb_release $rootfs $deb_local_mirror
-echo "debootstrap ok"
+echo "=> debootstrapping finished."
 
 cp /usr/bin/qemu-arm-static usr/bin/
 
@@ -282,7 +292,7 @@ mv /resize2fs.sh /etc/rc.local.d/00_resize2fs.sh" > firstboot.sh
 chmod +x firstboot.sh
 
 # execute "more.sh" if it exists
-if [ -f ./more.sh ]; then
+if [ -f $workingpath/more.sh ]; then
   echo "=> executing more.sh."
 	source ./more.sh
 fi
