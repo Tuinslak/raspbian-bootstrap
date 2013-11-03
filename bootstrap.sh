@@ -294,7 +294,7 @@ chmod +x firstboot.sh
 # execute "more.sh" if it exists
 if [ -f $workingpath/more.sh ]; then
   echo "=> executing more.sh."
-	source ./more.sh
+	source $workingpath/more.sh
 fi
 
 echo "#!/bin/bash
@@ -317,7 +317,12 @@ umount $rootp
 
 if [ "$image" != "" ]; then
   kpartx -d $image
-  echo "Created Image: $image"
+  echo "=> created Image: $image."
 fi
 
+echo "=> finished."
+
+echo "There is a big chance umounting will fail."
+echo "Please manually unmount after killing active processes under qemu (ps x | grep qemu); probably cron and rsyslog."
+echo ""
 echo "Done... It's `date +%H:%m` and a beautiful day. Enjoy it."
