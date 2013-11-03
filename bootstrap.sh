@@ -248,6 +248,14 @@ if test -f /firstboot.sh
 then
   . /firstboot.sh
   rm /firstboot.sh
+  exit 0
+fi
+
+if test -f /secondboot.sh
+then
+  . /secondboot.sh
+  rm /secondboot.sh
+  exit 0
 fi
 
 exit 0" > etc/rc.local.d/firstboot
@@ -285,11 +293,17 @@ dpkg-reconfigure openssh-server
 # Set the time
 ntpdate europe.pool.ntp.org
 
-# execute resize2fs at next boot (because there is big chance
-# fdisk couldn't update the partition table on live systeem. A reboot is required.
-mv /resize2fs.sh /etc/rc.local.d/00_resize2fs.sh" > firstboot.sh
+# reboot to update partition table
+reboot
+" > firstboot.sh
 
 chmod +x firstboot.sh
+
+echo "#!/bin/sh
+resize2fs /dev/root
+" > secondboot.sh
+
+chmod +x secondboot.sh
 
 # execute "more.sh" if it exists
 if [ -f $workingpath/more.sh ]; then

@@ -4,6 +4,17 @@
 # Execute and add all the stuff. Be sure to check bootstrap.sh as to what should be executed as chroot
 # and what shouldn't. 
 
+echo "#!/bin/bash
+# example of additional commands. I, for example, need Puppet.
+apt-get -y install puppet
+rm -f fourth-stage" > fourth-stage
+
+chmod +x fourth-stage
+
+# And execute it.
+echo "=> executing fourth-stage."
+LANG=C chroot $rootfs /fourth-stage
+
 mkdir -p etc/puppet
 
 echo "[main]
@@ -18,16 +29,7 @@ postrun_command=/etc/puppet/etckeeper-commit-post
 server=puppet.corp.flatturtle.com" > etc/puppet/puppet.conf
 
 echo "
-puppet agent --waitforcert 60" >> firstboot.sh
-
-echo "#!/bin/bash
-# example of additional commands. I, for example, need Puppet.
-apt-get -y install puppet
-rm -f fourth-stage" > fourth-stage
-
-chmod +x fourth-stage
-
-# And execute it.
-LANG=C chroot $rootfs /fourth-stage
+# Execute Puppet.
+puppet agent --waitforcert 60" >> secondboot.sh
 
 # EOF
