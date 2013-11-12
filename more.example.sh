@@ -6,12 +6,13 @@
 
 echo "#!/bin/bash
 # example of additional commands. I, for example, need Puppet.
+# Install Puppet, via chroot (could also be defined in packages.sh):
 apt-get -y install puppet
 rm -f fourth-stage" > fourth-stage
 
 chmod +x fourth-stage
 
-# And execute it.
+# And execute it:
 echo "=> executing fourth-stage."
 LANG=C chroot $rootfs /fourth-stage
 
@@ -26,7 +27,7 @@ factpath=$vardir/lib/facter
 templatedir=$confdir/templates
 prerun_command=/etc/puppet/etckeeper-commit-pre
 postrun_command=/etc/puppet/etckeeper-commit-post
-server=puppet.corp.flatturtle.com" > etc/puppet/puppet.conf
+server=puppet.yeri.be" > etc/puppet/puppet.conf
 
 echo "
 # Execute Puppet.
