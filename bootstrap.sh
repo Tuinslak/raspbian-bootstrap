@@ -43,7 +43,7 @@ rootfs="${buildenv}/rootfs"
 bootfs="${rootfs}/boot"
 workingpath=`pwd`
 deb_local_mirror="http://mirrordirector.raspbian.org/raspbian"
-deb_release="wheezy"
+deb_release="jessie"
 device=$1
 mydate=`date +%Y%m%d`
 image=""
@@ -98,9 +98,9 @@ if [ "$image" != "" ]; then
   losetup -d $device
   device=`kpartx -va $image | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
   echo "--- kpartx device ${device}"
-  device="/dev/mapper/${device}"
-  bootp=${device}p1
-  rootp=${device}p2
+  device="/dev/loop${device}"
+  bootp=${device}1
+  rootp=${device}2
   echo "--- rootp ${rootp}"
   echo "--- bootp ${bootp}"
 else
