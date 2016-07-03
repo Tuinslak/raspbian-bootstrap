@@ -150,8 +150,8 @@ export LANG=C
 export LC_ALL=C
 
 # This should match what has been written above. Couldn't use variables in my test; they got cleared for some reason.
-echo "deb $deb_local_mirror wheezy main" > etc/apt/sources.list
-echo "deb-src $deb_local_mirror wheezy main" >> etc/apt/sources.list
+echo "deb $deb_local_mirror $deb_release main contrib non-free rpi" > etc/apt/sources.list
+echo "deb-src $deb_local_mirror $deb_release main contrib non-free rpi" >> etc/apt/sources.list
 
 # get the raspbian key, or you'll get untrusted package errors
 wget http://archive.raspbian.org/raspbian.public.key -O ./raspbian.key
