@@ -36,7 +36,7 @@ KEYMAP="console-data/keymap/azerty/belgian/standard/keymap"
 bootsize="128M"
 # set rootsize to 1,6Gb. This way, we'll be able to flash 2Gb and up SD cards.
 # We'll run resize2fs later to make sure it uses the entire disk.
-rootsize="1624M"
+rootsize="1024M"
 # some other vars you should not really touch
 buildenv="/root/raspbian/bootstrap"
 rootfs="${buildenv}/rootfs"
@@ -70,7 +70,7 @@ if [ "$device" == "" ]; then
   echo "WARNING: No block device given, creating image instead."
   mkdir -p $buildenv
   image="${buildenv}/rpi_basic_${deb_release}_${mydate}.img"
-  dd if=/dev/zero of=$image bs=1MB count=1900
+  dd if=/dev/zero of=$image bs=1MB count=1000
   device=`losetup -f --show $image`
   echo "Image $image Created and mounted as $device"
 else
@@ -89,7 +89,7 @@ n
 p
 2
 
-+$rootsize
+
 w
 EOF
 
@@ -98,7 +98,7 @@ if [ "$image" != "" ]; then
   losetup -d $device
   device=`kpartx -va $image | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
   echo "--- kpartx device ${device}"
-  device="/dev/mapper/${device}"
+  device="/dev/${device}"
   bootp=${device}p1
   rootp=${device}p2
   echo "--- rootp ${rootp}"
