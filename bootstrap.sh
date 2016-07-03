@@ -36,7 +36,7 @@ KEYMAP="console-data/keymap/azerty/belgian/standard/keymap"
 bootsize="128M"
 # set rootsize to 1,6Gb. This way, we'll be able to flash 2Gb and up SD cards.
 # We'll run resize2fs later to make sure it uses the entire disk.
-rootsize="1024M"
+#rootsize="1024M" => irrelevant in new script, will use max size
 # some other vars you should not really touch
 buildenv="/root/raspbian/bootstrap"
 rootfs="${buildenv}/rootfs"
@@ -95,10 +95,12 @@ EOF
 
 
 if [ "$image" != "" ]; then
-  losetup -d $device
+  # this fails
+  #losetup -d $device
+  losetup -D
   device=`kpartx -va $image | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
   echo "--- kpartx device ${device}"
-  device="/dev/${device}"
+  device="/dev/mapper/${device}"
   bootp=${device}p1
   rootp=${device}p2
   echo "--- rootp ${rootp}"
