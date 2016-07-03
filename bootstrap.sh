@@ -70,7 +70,7 @@ if [ "$device" == "" ]; then
   echo "WARNING: No block device given, creating image instead."
   mkdir -p $buildenv
   image="${buildenv}/rpi_basic_${deb_release}_${mydate}.img"
-  dd if=/dev/zero of=$image bs=1MB count=1000
+  dd if=/dev/zero of=$image bs=1MB count=1900
   device=`losetup -f --show $image`
   echo "Image $image Created and mounted as $device"
 else
@@ -98,22 +98,22 @@ if [ "$image" != "" ]; then
   losetup -d $device
   device=`kpartx -va $image | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
   echo "--- kpartx device ${device}"
-  device="/dev/loop${device}"
-  bootp=${device}0
-  rootp=${device}1
+  device="/dev/mapper/${device}"
+  bootp=${device}p1
+  rootp=${device}p2
   echo "--- rootp ${rootp}"
   echo "--- bootp ${bootp}"
 else
   if ! [ -b ${device}1 ]; then
-    bootp=${device}0
-    rootp=${device}1
+    bootp=${device}p1
+    rootp=${device}p2
     if ! [ -b ${bootp} ]; then
       echo "ERROR: Can't find boot partition, neither as ${device}1, nor as ${device}p1. Exiting."
       exit 1
     fi
   else
-    bootp=${device}0
-    rootp=${device}1
+    bootp=${device}1
+    rootp=${device}2
   fi
 fi
 
