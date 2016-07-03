@@ -99,21 +99,21 @@ if [ "$image" != "" ]; then
   device=`kpartx -va $image | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
   echo "--- kpartx device ${device}"
   device="/dev/loop${device}"
-  bootp=${device}1
-  rootp=${device}2
+  bootp=${device}0
+  rootp=${device}1
   echo "--- rootp ${rootp}"
   echo "--- bootp ${bootp}"
 else
   if ! [ -b ${device}1 ]; then
-    bootp=${device}p1
-    rootp=${device}p2
+    bootp=${device}0
+    rootp=${device}1
     if ! [ -b ${bootp} ]; then
       echo "ERROR: Can't find boot partition, neither as ${device}1, nor as ${device}p1. Exiting."
       exit 1
     fi
   else
-    bootp=${device}1
-    rootp=${device}2
+    bootp=${device}0
+    rootp=${device}1
   fi
 fi
 
